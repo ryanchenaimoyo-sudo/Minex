@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MineX</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#c89b2a">
+  <link rel="icon" href="/icon-192.png">
+  <style>
+    body { background:#070707; color:white; font-family:Arial; padding:20px; }
+    h1 { color:#c89b2a; }
+    input, textarea { width:100%; padding:10px; margin-bottom:10px; border-radius:6px; }
+    button { background:#c89b2a; border:none; padding:10px 20px; color:black; font-weight:bold; border-radius:6px; }
+    .post { padding:15px; margin-top:10px; background:#111; border-left:4px solid #c89b2a; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h1>MineX Feed</h1>
+
+  <input id="name" placeholder="Your name">
+  <textarea id="message" placeholder="Write something..."></textarea>
+  <button onclick="post()">Post</button>
+
+  <h2>Feed</h2>
+  <div id="feed"></div>
+
+<script src="main.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('SW registered'))
+      .catch(err => console.log('SW failed', err));
+  }
+</script>
+
+</body>
+</html>
