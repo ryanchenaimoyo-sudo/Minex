@@ -1,0 +1,17 @@
+import { supabase } from '../../lib/supabaseClient'
+
+export default async function handler(req, res){
+  if (req.method === 'GET') {
+    const { userId } = req.query
+    const { data, error } = await supabase.from('chats').select('*').or(`user_a.eq.${userId},user_b.eq.${userId}`)
+    if (error) return res.status(500).json({ error: error.message })
+    res.json({ chats: data })
+  } else if (req.method === 'POST') {
+    const { userA, userB } = req.body
+    const { data: existing } = await supabase.from('chats').select('*').or(`(user_a.eq.${userA},user_b.eq.${userB}),(user_a.eq.${userB},user_b.eq.${userA})`).maybeSingle()
+    if (existing) return res.json({ chat: existing })
+    const { data, error } = await supabase.from('chats').insert({ user_a: userA, user_b: userB, created_at: new Date() }).select().single()
+    if (error) return res.status(500).json({ error: error.message })
+    res.json({ chat: data })
+  } else res.status(405).end()
+}
