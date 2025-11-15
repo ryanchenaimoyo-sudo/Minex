@@ -1,0 +1,70 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
+
+export default function ChatPage(){
+  const [user, setUser] = useState(null)
+  const [chats, setChats] = useState([])
+  const [active, setActive] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [text, setText] = useState('')
+
+  useEffect(()=> {
+    supabase.auth.getUser().then(r => setUser(r.data.user ?? null))
+    const { data } = supabase.auth.onAuthStateChange((_, session) => setUser(session?.user ?? null))
+    return ()=> data?.subscription?.unsubscribe?.()
+  },[])
+
+  useEffect(()=> { if(!user) return loadChats() },[user])
+
+  async function loadChats(){
+    const { data } = await supabase.from('chats').select('*').or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
+    setChats(data || [])
+  }
+
+  async function openChat(chat){
+    setActive(chat)
+    const { data } = await supabase.from('messages').select('*').eq('chat_id', chat.id).order('created_at',{ascending:false}).limit(200)
+    setMessages(data || [])
+    const channel = supabase.channel(`room:${chat.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter:`chat_id=eq.${chat.id}` }, payload => {
+        setMessages(prev => [payload.new, ...prev])
+      }).subscribe()
+    // note: to clean up you can call supabase.removeChannel(channel) when switching chats
+  }
+
+  async function send(){
+    if(!user || !active) return alert('Open a chat and sign in')
+    await supabase.from('messages').insert({ chat_id: active.id, sender: user.id, body: text })
+    setText('')
+  }
+
+  return (
+    <div style={{padding:16}}>
+      <h2>Chat</h2>
+      <div style={{display:'flex',gap:12}}>
+        <div style={{width:200}}>
+          <h4>Your chats</h4>
+          {chats.map(c=>(
+            <div key={c.id} style={{padding:8,border:'1px solid #222',marginBottom:6,cursor:'pointer'}} onClick={()=>openChat(c)}>
+              {c.id}
+            </div>
+          ))}
+        </div>
+
+        <div style={{flex:1}}>
+          {active ? (
+            <>
+              <div style={{height:300,overflow:'auto',display:'flex',flexDirection:'column-reverse',background:'#0b0b0b',padding:8}}>
+                {messages.map(m => <div key={m.id} style={{padding:6,background:'#111',marginBottom:6}}><strong>{m.sender}</strong>: {m.body}</div>)}
+              </div>
+              <div style={{display:'flex',gap:8,marginTop:8}}>
+                <input value={text} onChange={e=>setText(e.target.value)} />
+                <button onClick={send}>Send</button>
+              </div>
+            </>
+          ) : <div>Select a chat</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
