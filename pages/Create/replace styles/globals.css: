@@ -1,0 +1,11 @@
+:root{ --bg:#070707; --panel:#0f0f10; --gold:#c89b2a; --muted:#9aa;}
+*{box-sizing:border-box}
+html,body,#__next{height:100%}
+body{margin:0;background:var(--bg);color:#eee;font-family:Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.container{max-width:980px;margin:0 auto;padding:16px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.btn{background:var(--gold);border:none;color:#000;padding:8px 12px;border-radius:8px;font-weight:700}
+.card{background:#111;padding:12px;border-radius:10px;margin-bottom:12px;border:1px solid #222}
+.input, textarea{width:100%;padding:8px;margin-top:8px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff}
+
